@@ -19,13 +19,15 @@ class App extends React.Component {
       current: {},
       daily: [],
       status: "Loading weather app",
-      loadingState: true
+      loadingState: true,
+      error: false
     };
 
     this.getData = this.getData.bind(this);
   }
 
   getData() {
+    this.setState({ error: false });
     navigator.geolocation.getCurrentPosition((position) => {
 
       const lat = position.coords.latitude;
@@ -44,15 +46,14 @@ class App extends React.Component {
           daily: response.data.daily,
           loadingState: false 
         });
-
-        console.log(this.state);
       }).catch((errors) => {
-        console.log(errors);
+        // Network Error
+        this.setState({ error: true });
       });
       
     }, (error) => {
       // Geolocation API Errors
-      this.setState({ status: error.message });
+      this.setState({ error: true });
     });
   }
   
@@ -75,6 +76,12 @@ class App extends React.Component {
   render() {
     return (
       <>
+      { this.state.error && 
+          <div className="container">
+            <h2>Something went wrong at our end</h2>
+            <button style={{width: "100px", height: "50px"}} onClick={this.getData}>Retry</button>
+          </div>
+      }
       <div id="load" className="container">
         { this.state.loadingState && 
           <>
