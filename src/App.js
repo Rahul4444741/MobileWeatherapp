@@ -2,6 +2,8 @@ import React from "react";
 import Lottie from "react-lottie";
 import { create } from "apisauce";
 
+import DayData from "./DayData";
+
 import animation from "./lotties/226-splashy-loader.json";
 import './App.css';
 
@@ -19,15 +21,17 @@ class App extends React.Component {
       status: "Loading weather app",
       loadingState: true
     };
+
+    this.getData = this.getData.bind(this);
   }
-  
-  componentDidMount() {
+
+  getData() {
     navigator.geolocation.getCurrentPosition((position) => {
 
       const lat = position.coords.latitude;
       const long = position.coords.longitude;
       const API_KEY = "2cca3eb304406c87f3cbf9857743ee40";
-      let api_url = `/onecall?lat=${lat}&lon=${long}&exclude=hourly,minutely&appid=${API_KEY}`;  
+      let api_url = `/onecall?lat=${lat}&lon=${long}&exclude=hourly,minutely&units=metric&appid=${API_KEY}`;  
       
       const api = create({ baseURL: "https://api.openweathermap.org/data/2.5" });
       
@@ -50,11 +54,12 @@ class App extends React.Component {
       // Geolocation API Errors
       this.setState({ status: error.message });
     });
-
+  }
+  
+  componentDidMount() {
     setTimeout(() => {
-      this.setState({ 
-        loadingState: true,
-      });
+      this.getData();
+      document.getElementById("load").style.display = "none";
     }, 6000);
   }
   
@@ -69,16 +74,29 @@ class App extends React.Component {
 
   render() {
     return (
-      <div className="container">
+      <>
+      <div id="load" className="container">
         { this.state.loadingState && 
-          <Lottie 
-	          options={this.options}
-            height={250}
-            width={250}
-          /> 
+          <>
+            <Lottie 
+	            options={this.options}
+              height={250}
+              width={250}
+            />
+            <h3>{ this.state.status }</h3>
+          </> 
         }
-        <h3>{ this.state.status }</h3>
       </div>
+
+      { !this.state.loadingState && <div className="data">
+        <h1>{ Math.floor(this.state.current.temp) }&deg;C</h1>
+        <ul>
+          { this.state.daily.map((day) => (
+            <DayData dt={day.dt} temp={day.temp.day}></DayData>
+          ))}
+        </ul>
+      </div>}
+      </>
     );
   }
 }
